@@ -13,7 +13,7 @@ use floem::{
     },
     View,
 };
-use lapce_core::mode::Modes;
+use lapce_core::{modal_flavour::ModalFlavour, mode::Modes};
 
 use crate::{
     command::LapceCommand,
@@ -39,7 +39,7 @@ pub fn keymap_view(editors: Editors, common: Rc<CommonData>) -> impl View {
     let keypress = common.keypress;
     let ui_line_height_memo = common.ui_line_height;
     let ui_line_height = move || ui_line_height_memo.get() * 1.2;
-    let modal = create_memo(move |_| config.get().core.modal);
+    let modal_flavour = create_memo(move |_| config.get().core.modal_flavour);
     let picker = KeymapPicker {
         cmd: create_rw_signal(None),
         keymap: create_rw_signal(None),
@@ -223,7 +223,10 @@ pub fn keymap_view(editors: Editors, common: Rc<CommonData>) -> impl View {
                             .border_color(
                                 config.get().color(LapceColor::LAPCE_BORDER),
                             )
-                            .apply_if(!modal.get(), |s| s.hide())
+                            .apply_if(
+                                matches!(modal_flavour.get(), ModalFlavour::None),
+                                |s| s.hide(),
+                            )
                     })
                 },
                 container(
@@ -321,7 +324,10 @@ pub fn keymap_view(editors: Editors, common: Rc<CommonData>) -> impl View {
                     .height_pct(100.0)
                     .border_right(1.0)
                     .border_color(config.get().color(LapceColor::LAPCE_BORDER))
-                    .apply_if(!modal.get(), |s| s.hide())
+                    .apply_if(
+                        matches!(modal_flavour.get(), ModalFlavour::None),
+                        |s| s.hide(),
+                    )
             }),
             container(text("When").style(move |s| {
                 s.text_ellipsis().padding_horiz(10.0).min_width(0.0)

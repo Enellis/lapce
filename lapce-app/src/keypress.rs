@@ -14,7 +14,10 @@ use floem::{
 };
 use indexmap::IndexMap;
 use itertools::Itertools;
-use lapce_core::mode::{Mode, Modes};
+use lapce_core::{
+    modal_flavour::ModalFlavour,
+    mode::{Mode, Modes},
+};
 
 pub use self::press::KeyPress;
 use self::{
@@ -478,7 +481,7 @@ impl KeyPressData {
         IndexMap<Vec<KeyMapPress>, Vec<KeyMap>>,
         IndexMap<String, Vec<KeyMap>>,
     )> {
-        let is_modal = config.core.modal;
+        let is_modal = config.core.modal_flavour != ModalFlavour::None;
 
         let mut loader = KeyMapLoader::new();
 

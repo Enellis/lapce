@@ -4,7 +4,9 @@ use floem::{
     peniko::kurbo::{Point, Rect, Size},
     Renderer, View, ViewId,
 };
-use lapce_core::{buffer::rope_text::RopeText, mode::Mode};
+use lapce_core::{
+    buffer::rope_text::RopeText, modal_flavour::ModalFlavour, mode::Mode,
+};
 
 use crate::config::{color::LapceColor, LapceConfig};
 
@@ -142,7 +144,7 @@ impl View for EditorGutterView {
         let attrs_list = AttrsList::new(attrs);
         let current_line_attrs_list =
             AttrsList::new(attrs.color(config.color(LapceColor::EDITOR_FOREGROUND)));
-        let show_relative = config.core.modal
+        let show_relative = config.core.modal_flavour != ModalFlavour::None
             && config.editor.modal_mode_relative_line_numbers
             && mode != Mode::Insert
             && kind_is_normal;

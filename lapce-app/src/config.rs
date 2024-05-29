@@ -8,6 +8,7 @@ use std::{
 use floem::peniko::Color;
 use itertools::Itertools;
 use lapce_core::directory::Directory;
+use lapce_core::modal_flavour::ModalFlavour;
 use lapce_proxy::plugin::wasi::find_all_volts;
 use lapce_rpc::plugin::VoltID;
 use lsp_types::{CompletionItemKind, SymbolKind};
@@ -126,6 +127,9 @@ pub struct LapceConfig {
     /// The couple names for the wrap style
     #[serde(skip)]
     wrap_style_list: im::Vector<String>,
+    /// A list of the modal editing modes
+    #[serde(skip)]
+    modal_flavour_list: im::Vector<String>,
 }
 
 impl LapceConfig {
@@ -170,6 +174,12 @@ impl LapceConfig {
             WrapStyle::EditorWidth.to_string(),
             // TODO: WrapStyle::WrapColumn.to_string(),
             WrapStyle::WrapWidth.to_string()
+        ];
+
+        lapce_config.modal_flavour_list = im::vector![
+            ModalFlavour::None.to_string(),
+            ModalFlavour::Vim.to_string(),
+            ModalFlavour::Helix.to_string(),
         ];
 
         lapce_config.terminal.get_indexed_colors();
@@ -342,8 +352,12 @@ impl LapceConfig {
         self.resolve_theme(workspace);
     }
 
-    pub fn set_modal(&mut self, _workspace: &LapceWorkspace, modal: bool) {
-        self.core.modal = modal;
+    pub fn set_modal_flavour(
+        &mut self,
+        _workspace: &LapceWorkspace,
+        modal_flavour: ModalFlavour,
+    ) {
+        self.core.modal_flavour = modal_flavour;
     }
 
     /// Get the color by the name from the current theme if it exists
@@ -846,6 +860,15 @@ impl LapceConfig {
     /// update the dropdown items.
     pub fn get_dropdown_info(&self, kind: &str, key: &str) -> Option<DropdownInfo> {
         match (kind, key) {
+            ("core", "modal-flavour") => Some(DropdownInfo {
+                active_index: self
+                    .modal_flavour_list
+                    .iter()
+                    .flat_map(|w| ModalFlavour::try_from_str(w))
+                    .position(|w| w == self.core.modal_flavour)
+                    .unwrap_or(0),
+                items: self.modal_flavour_list.clone(),
+            }),
             ("core", "color-theme") => Some(DropdownInfo {
                 active_index: self
                     .color_theme_list

@@ -24,7 +24,7 @@ use floem::{
             },
             visual_line::{RVLine, VLine},
             CurrentLineColor, CursorSurroundingLines, Editor, EditorStyle,
-            IndentGuideColor, IndentStyleProp, Modal, ModalRelativeLine,
+            IndentGuideColor, IndentStyleProp, ModalFlavourProp, ModalRelativeLine,
             PhantomColor, PlaceholderColor, PreeditUnderlineColor,
             RenderWhitespaceProp, ScrollBeyondLastLine, SelectionColor,
             ShowIndentGuide, SmartTab, VisibleWhitespaceColor, WrapProp,
@@ -110,7 +110,7 @@ pub fn editor_style(
         config.color(LapceColor::EDITOR_FOREGROUND),
     )
     .set(ShowIndentGuide, config.editor.show_indent_guide)
-    .set(Modal, config.core.modal)
+    .set(ModalFlavourProp, config.core.modal_flavour)
     .set(
         ModalRelativeLine,
         config.editor.modal_mode_relative_line_numbers,

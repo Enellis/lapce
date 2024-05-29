@@ -23,7 +23,7 @@ use indexmap::IndexMap;
 use itertools::Itertools;
 use lapce_core::{
     command::FocusCommand, cursor::CursorAffinity, directory::Directory, meta,
-    mode::Mode, register::Register,
+    modal_flavour::ModalFlavour, mode::Mode, register::Register,
 };
 use lapce_rpc::{
     core::CoreNotification,
@@ -2228,7 +2228,7 @@ impl WindowTabData {
 
     /// Get the mode for the current editor or terminal
     pub fn mode(&self) -> Mode {
-        if self.common.config.get().core.modal {
+        if self.common.config.get().core.modal_flavour != ModalFlavour::None {
             let mode = if self.common.focus.get() == Focus::Workbench {
                 self.main_split
                     .active_editor

@@ -15,6 +15,7 @@ use floem::{
 };
 use lapce_core::{
     command::{EditCommand, FocusCommand, ScrollCommand},
+    modal_flavour::ModalFlavour,
     mode::{Mode, VisualMode},
     movement::{LinePosition, Movement},
     register::Clipboard,
@@ -125,10 +126,13 @@ impl KeyPressFocus for TerminalData {
             }
             CommandKind::Edit(cmd) => match cmd {
                 EditCommand::NormalMode => {
-                    if !config.core.modal {
-                        return CommandExecuted::Yes;
+                    match config.core.modal_flavour {
+                        ModalFlavour::None => return CommandExecuted::Yes,
+                        ModalFlavour::Vim => self.mode.set(Mode::Normal),
+                        ModalFlavour::Helix => {
+                            self.mode.set(Mode::Visual(VisualMode::Normal))
+                        }
                     }
-                    self.mode.set(Mode::Normal);
                     let raw = self.raw.get_untracked();
                     let mut raw = raw.write();
                     let term = &mut raw.term;
@@ -633,7 +637,7 @@ impl TerminalData {
 
     fn toggle_visual(&self, visual_mode: VisualMode) {
         let config = self.common.config.get_untracked();
-        if !config.core.modal {
+        if config.core.modal_flavour == ModalFlavour::None {
             return;
         }
 
@@ -659,7 +663,7 @@ impl TerminalData {
             term.toggle_vi_mode();
         }
         let ty = match visual_mode {
-            VisualMode::Normal => SelectionType::Simple,
+            VisualMode::Normal | VisualMode::HelixNormal => SelectionType::Simple,
             VisualMode::Linewise => SelectionType::Lines,
             VisualMode::Blockwise => SelectionType::Block,
         };

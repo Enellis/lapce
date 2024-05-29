@@ -38,6 +38,7 @@ use lapce_core::{
     },
     cursor::{Cursor, CursorMode},
     editor::EditType,
+    modal_flavour::ModalFlavour,
     mode::{Mode, MotionMode},
     rope_text_pos::RopeTextPosition,
     selection::{InsertDrift, SelRegion, Selection},
@@ -393,7 +394,11 @@ impl EditorData {
         let doc = self.doc();
         let text = self.editor.rope_text();
         let is_local = doc.content.with_untracked(|content| content.is_local());
-        let modal = self.editor.es.with_untracked(|s| s.modal()) && !is_local;
+        let modal_flavour = if is_local {
+            ModalFlavour::None
+        } else {
+            self.editor.es.with_untracked(|s| s.modal_flavour())
+        };
         let smart_tab = self
             .common
             .config
@@ -409,8 +414,9 @@ impl EditorData {
                 None
             };
 
-        let deltas =
-            batch(|| doc.do_edit(&mut cursor, cmd, modal, &mut register, smart_tab));
+        let deltas = batch(|| {
+            doc.do_edit(&mut cursor, cmd, modal_flavour, &mut register, smart_tab)
+        });
 
         if !deltas.is_empty() {
             if let Some(data) = yank_data {
@@ -1924,10 +1930,20 @@ impl EditorData {
             .buffer
             .with_untracked(|buffer| position.to_offset(buffer));
         let config = self.common.config.get_untracked();
-        self.cursor().set(if config.core.modal {
-            Cursor::new(CursorMode::Normal(offset), None, None)
-        } else {
-            Cursor::new(CursorMode::Insert(Selection::caret(offset)), None, None)
+        self.cursor().set(match config.core.modal_flavour {
+            ModalFlavour::None => {
+                Cursor::new(CursorMode::Insert(Selection::caret(offset)), None, None)
+            }
+            ModalFlavour::Vim => Cursor::new(CursorMode::Normal(offset), None, None),
+            ModalFlavour::Helix => Cursor::new(
+                CursorMode::Visual {
+                    start: offset,
+                    end: offset,
+                    mode: lapce_core::mode::VisualMode::HelixNormal,
+                },
+                None,
+                None,
+            ),
         });
         if let Some(scroll_offset) = scroll_offset {
             self.editor.scroll_to.set(Some(scroll_offset));
@@ -2807,7 +2823,8 @@ impl KeyPressFocus for EditorData {
                     && self.common.find.replace_focus.get_untracked()
             }
             Condition::SearchActive => {
-                if self.common.config.get_untracked().core.modal
+                if self.common.config.get_untracked().core.modal_flavour
+                    != ModalFlavour::None
                     && self.cursor().with_untracked(|c| !c.is_normal())
                 {
                     false

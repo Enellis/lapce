@@ -11,7 +11,10 @@ use floem::{
     View,
 };
 use indexmap::IndexMap;
-use lapce_core::mode::{Mode, VisualMode};
+use lapce_core::{
+    modal_flavour::ModalFlavour,
+    mode::{Mode, VisualMode},
+};
 use lsp_types::{DiagnosticSeverity, ProgressToken};
 
 use crate::{
@@ -81,19 +84,20 @@ pub fn status(
                     VisualMode::Normal => "Visual".to_string(),
                     VisualMode::Linewise => "Visual Line".to_string(),
                     VisualMode::Blockwise => "Visual Block".to_string(),
+                    VisualMode::HelixNormal => "Normal (Helix)".to_string(),
                 },
                 Mode::Terminal => "Terminal".to_string(),
             })
             .style(move |s| {
                 let config = config.get();
-                let display = if config.core.modal {
-                    Display::Flex
-                } else {
+                let display = if config.core.modal_flavour == ModalFlavour::None {
                     Display::None
+                } else {
+                    Display::Flex
                 };
 
                 let (bg, fg) = match mode.get() {
-                    Mode::Normal => (
+                    Mode::Normal | Mode::Visual(VisualMode::HelixNormal) => (
                         LapceColor::STATUS_MODAL_NORMAL_BACKGROUND,
                         LapceColor::STATUS_MODAL_NORMAL_FOREGROUND,
                     ),

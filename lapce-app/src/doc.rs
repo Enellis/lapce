@@ -45,6 +45,7 @@ use lapce_core::{
     indent::IndentStyle,
     language::LapceLanguage,
     line_ending::LineEnding,
+    modal_flavour::ModalFlavour,
     mode::MotionMode,
     register::Register,
     rope_text_pos::RopeTextPosition,
@@ -359,7 +360,11 @@ impl Doc {
     ) -> Editor {
         let common = &self.common;
         let config = common.config.get_untracked();
-        let modal = config.core.modal && !is_local;
+        let modal_flavour = if is_local {
+            ModalFlavour::None
+        } else {
+            config.core.modal_flavour
+        };
 
         let register = common.register;
         // TODO: we could have these Rcs created once and stored somewhere, maybe on
@@ -371,7 +376,7 @@ impl Doc {
             should_blink: Rc::new(should_blink(common.focus, common.keyboard_focus)),
         };
         let mut editor =
-            Editor::new_direct(cx, id, self.clone(), self.styling(), modal);
+            Editor::new_direct(cx, id, self.clone(), self.styling(), modal_flavour);
 
         editor.register = register;
         editor.cursor_info = cursor_info;
@@ -527,7 +532,7 @@ impl Doc {
         &self,
         cursor: &mut Cursor,
         cmd: &EditCommand,
-        modal: bool,
+        modal_flavour: ModalFlavour,
         register: &mut Register,
         smart_tab: bool,
     ) -> Vec<(Rope, RopeDelta, InvalLines)> {
@@ -550,7 +555,7 @@ impl Doc {
                         register,
                         EditConf {
                             comment_token: syntax.language.comment_token(),
-                            modal,
+                            modal_flavour,
                             smart_tab,
                             keep_indent: true,
                             auto_indent: true,
@@ -1696,11 +1701,12 @@ impl CommonAction for Doc {
         _ed: &Editor,
         cursor: &mut Cursor,
         cmd: &EditCommand,
-        modal: bool,
+        modal_flavour: ModalFlavour,
         register: &mut Register,
         smart_tab: bool,
     ) -> bool {
-        let deltas = Doc::do_edit(self, cursor, cmd, modal, register, smart_tab);
+        let deltas =
+            Doc::do_edit(self, cursor, cmd, modal_flavour, register, smart_tab);
         !deltas.is_empty()
     }
 }

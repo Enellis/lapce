@@ -1107,7 +1107,9 @@ impl MainSplitData {
                         if !same_path {
                             editor.update_doc(doc.clone());
                             editor.cursor().set(Cursor::origin(
-                                self.common.config.with_untracked(|c| c.core.modal),
+                                self.common
+                                    .config
+                                    .with_untracked(|c| c.core.modal_flavour),
                             ));
                         }
                     }

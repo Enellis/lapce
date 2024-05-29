@@ -1,7 +1,7 @@
 #:schema ../extra/schemas/settings.json
 
 [core]
-modal = false
+modal-flavour = "none"
 color-theme = "Lapce Dark"
 icon-theme = "Lapce Codicons"
 custom-titlebar = true
